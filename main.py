@@ -3,19 +3,12 @@ from bs4 import BeautifulSoup
 from fake_headers import Headers
 from pprint import pprint
 
-# headers = Headers(browser='chrome', os = 'win')
-# url = 'https://nahabino.hh.ru/search/vacancy?text=Python+%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%87%D0%B8%D0%BA&from=suggest_post&salary=&ored_clusters=true'
-# r = requests.get(url,headers=headers.generate()).text
-# print(r)
-# # soup = BeautifulSoup(r,'lxml')
-# #
-# # i = soup.find('h3', class_= 'bloko-header-section-3').find('a', class_='serp-item__title')
-# # print(i)
 headers = Headers(browser='chrome', os='win')
 url = 'https://nahabino.hh.ru/search/vacancy?text=Python+%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%87%D0%B8%D0%BA&from=suggest_post&salary=&ored_clusters=true'
 r = requests.get(url, headers=headers.generate()).text
 # print(r)
 soup = BeautifulSoup(r, 'lxml')
+name = soup.find('h3', class_= 'bloko-header-section-3').find('a', class_='serp-item__title').text
 
 # link = soup.find('h3', class_= 'bloko-header-section-3').find('a', class_='serp-item__title').get('href')
 # description = soup.find('div',class_='HH-MainContent HH-Supernova-MainContent').find('div',class_='vacancy-description')
@@ -33,6 +26,7 @@ profession_titles = soup.find_all('h3', class_='bloko-header-section-3')
 for profession in profession_titles:
     filter_1.append(profession)
     # link = profession.find('a', class_='serp-item__title').get('href')
+
 
 filter_2 = []
 for raw in filter_1:
@@ -52,27 +46,9 @@ for links in pre_final_list:
         continue
     else:
         link = links.find('a', class_='serp-item__title').get('href')
+        titles = links.find('a', class_='serp-item__title').text
 
 
-    print(link)
-
-# for links in parsed_list:
-#     link = links.find('a', class_='serp-item__title')
-# print(links)
-
-# print(all_links)
-# profession_titles = soup.findAll('h3', class_='bloko-header-section-3')
-# for profession in profession_titles:
-#     profession_title = profession.find('a', class_='serp-item__title')
-#     print(profession_title)
+    print(f"{titles}:{link}")
 
 
-# for profession in profession_titles:
-#     link = profession.find('a', class_='serp-item__title').get('href')
-#     profession_title = profession.find('a',class_='serp-item__title' ).text
-#     print(profession_title)
-#     link = profession.find('a', class_='serp-item__title').get('href')
-#     if not profession:
-#         continue
-#     else:
-#         print(link)
