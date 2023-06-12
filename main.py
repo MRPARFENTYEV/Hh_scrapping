@@ -8,7 +8,7 @@ url = 'https://nahabino.hh.ru/search/vacancy?text=Python+%D1%80%D0%B0%D0%B7%D1%8
 r = requests.get(url, headers=headers.generate()).text
 # print(r)
 soup = BeautifulSoup(r, 'lxml')
-name = soup.find('h3', class_= 'bloko-header-section-3').find('a', class_='serp-item__title').text
+name = soup.find('h3', class_='bloko-header-section-3').find('a', class_='serp-item__title').text
 
 # link = soup.find('h3', class_= 'bloko-header-section-3').find('a', class_='serp-item__title').get('href')
 # description = soup.find('div',class_='HH-MainContent HH-Supernova-MainContent').find('div',class_='vacancy-description')
@@ -27,7 +27,6 @@ for profession in profession_titles:
     filter_1.append(profession)
     # link = profession.find('a', class_='serp-item__title').get('href')
 
-
 filter_2 = []
 for raw in filter_1:
     if 'По вашему запросу ещё будут появляться новые вакансии. Присылать вам?' not in raw:
@@ -41,14 +40,14 @@ for lines in parsed_list:
     if 'Как вам результаты поиска?' not in pre_final_list:
         pre_final_list.append(lines)
 
-for links in pre_final_list:
-    if None in links:
-        continue
-    else:
-        link = links.find('a', class_='serp-item__title').get('href')
-        titles = links.find('a', class_='serp-item__title').text
+for links in pre_final_list[:-1]:
+    # if None in links:
+    #     continue
+    # else:
+
+    link = links.find('a', class_='serp-item__title').get('href')
+    titles = links.find('a', class_='serp-item__title').text
+# print(links)
 
 
     print(f"{titles}:{link}")
-
-
