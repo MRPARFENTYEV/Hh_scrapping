@@ -2,52 +2,64 @@ import requests
 from bs4 import BeautifulSoup
 from fake_headers import Headers
 from pprint import pprint
+import time
+import json
+import re
 
 headers = Headers(browser='chrome', os='win')
-url = 'https://nahabino.hh.ru/search/vacancy?text=Python+%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%87%D0%B8%D0%BA&from=suggest_post&salary=&ored_clusters=true'
-r = requests.get(url, headers=headers.generate()).text
-# print(r)
-soup = BeautifulSoup(r, 'lxml')
-name = soup.find('h3', class_='bloko-header-section-3').find('a', class_='serp-item__title').text
+# Получаем вакансии с первой страницы
+url = "https://hh.ru/search/vacancy?text=Python+django+flask&from=suggest_post&salary=&area=1&area=2&ored_clusters=true"
+r = requests.get(url, headers=headers.generate())
+time.sleep(2)
 
-# link = soup.find('h3', class_= 'bloko-header-section-3').find('a', class_='serp-item__title').get('href')
-# description = soup.find('div',class_='HH-MainContent HH-Supernova-MainContent').find('div',class_='vacancy-description')
-# description = soup.find('div',class_='HH-MainContent HH-Supernova-MainContent').
-# print(description)
+soup = BeautifulSoup(r.text, 'lxml')
 
-# print(description)
+# links = [vacancy["href"] for vacancy in soup.find_all("a", class_="serp-item__title")]
+# Получаем ссылки на вакансии
 
+links = []
+salary = []
+company_title = []
+whereabouts = []
+for vacancy in soup.find_all("a", class_="serp-item__title"):
+    links.append(vacancy["href"])
 
-filter_1 = []
-profession_title = soup.find('h3', class_='bloko-header-section-3').find('a', class_='serp-item__title').text
+# Переходим по каждой ссылки на страницу вакансии и парсим нужные сведения
+for link in links:
 
-profession_titles = soup.find_all('h3', class_='bloko-header-section-3')
+    r = requests.get(link, headers=headers.generate())
 
-for profession in profession_titles:
-    filter_1.append(profession)
-    # link = profession.find('a', class_='serp-item__title').get('href')
+    soup = BeautifulSoup(r.text, 'lxml')
 
-filter_2 = []
-for raw in filter_1:
-    if 'По вашему запросу ещё будут появляться новые вакансии. Присылать вам?' not in raw:
-        filter_2.append(raw)
-parsed_list = []
-for elements in filter_2:
-    if 'Быстрые фильтры' not in elements:
-        parsed_list.append(elements)
-pre_final_list = []
-for lines in parsed_list:
-    if 'Как вам результаты поиска?' not in pre_final_list:
-        pre_final_list.append(lines)
+    # Получаем вилку зарплаты и название компании
+    description = soup.find_all("span", class_="bloko-header-section-2 bloko-header-section-2_lite")
+    if len(description) == 2:
+        # print(description)
+        company_title.append(description[0].text.strip())
+        salary.append(description[1].text.strip())
+    # Если зарплата не указана, выводим название компании
+    else:
+        # print(description)
+        company_title.append(description[0].text.strip(), )
+        salary.append("Зарплата не указана")
 
-for links in pre_final_list[:-1]:
-    # if None in links:
-    #     continue
-    # else:
-
-    link = links.find('a', class_='serp-item__title').get('href')
-    titles = links.find('a', class_='serp-item__title').text
-# print(links)
+    # Если длина списка более 1 элемента -> вытаскиваем город регуляркой
+    location = soup.find_all("p", attrs={"data-qa": "vacancy-view-location"})
+    city = soup.find('div', attrs={"data-qa": "vacancy-serp__vacancy-address"}).text
+    whereabouts.append(city)
 
 
-    print(f"{titles}:{link}")
+# def write(data, filename):
+#     data = json.dumps(data)
+#     data = json.loads(str(data))
+#     with open(filename, 'w', encoding='utf-8') as file:
+#         json.dump(data, file, indent= 50)
+#
+#
+# Hh_data = {'Ссылка': links,
+#            'Зарплата ': salary,
+#            'Название компании': company_title,
+#            'Город': whereabouts
+#            }
+#
+# write(Hh_data, 'data.json')
