@@ -1,65 +1,63 @@
+import json
+import csv
 import requests
 from bs4 import BeautifulSoup
 from fake_headers import Headers
 from pprint import pprint
 import time
-import json
 import re
 
+all_links = 'https://hh.ru/search/vacancy?area=1&area=2&search_field=name&search_field=company_name&search_field=description&enable_snippets=false&text=python+%2B+flask'
 headers = Headers(browser='chrome', os='win')
-# Получаем вакансии с первой страницы
-url = "https://hh.ru/search/vacancy?text=Python+django+flask&from=suggest_post&salary=&area=1&area=2&ored_clusters=true"
-r = requests.get(url, headers=headers.generate())
+req = requests.get(all_links, headers=headers.generate())
 time.sleep(2)
+soup = BeautifulSoup(req.text, 'lxml')
+results = soup.find_all('div', class_='serp-item')
 
-soup = BeautifulSoup(r.text, 'lxml')
+titles =[]
+links =[]
+payment =[]
+whereabouts =[]
+parsed_data =[]
 
-# links = [vacancy["href"] for vacancy in soup.find_all("a", class_="serp-item__title")]
-# Получаем ссылки на вакансии
 
-links = []
-salary = []
-company_title = []
-whereabouts = []
-for vacancy in soup.find_all("a", class_="serp-item__title"):
-    links.append(vacancy["href"])
+for res in results:
+    title = res.find("a", class_="serp-item__title").text
+    titles.append(title)
+    hrefs = res.find("a", class_="serp-item__title").get('href')
+    links.append(hrefs)
+    salary_find = res.find('span', attrs={'data-qa': 'vacancy-serp__vacancy-compensation'})
 
-# Переходим по каждой ссылки на страницу вакансии и парсим нужные сведения
-for link in links:
+    if salary_find:
+        salary = salary_find.text
+        payment.append(salary)
 
-    r = requests.get(link, headers=headers.generate())
-
-    soup = BeautifulSoup(r.text, 'lxml')
-
-    # Получаем вилку зарплаты и название компании
-    description = soup.find_all("span", class_="bloko-header-section-2 bloko-header-section-2_lite")
-    if len(description) == 2:
-        # print(description)
-        company_title.append(description[0].text.strip())
-        salary.append(description[1].text.strip())
-    # Если зарплата не указана, выводим название компании
     else:
-        # print(description)
-        company_title.append(description[0].text.strip(), )
-        salary.append("Зарплата не указана")
+        salary = 'з/п не указана'
+        payment.append(salary)
 
-    # Если длина списка более 1 элемента -> вытаскиваем город регуляркой
-    location = soup.find_all("p", attrs={"data-qa": "vacancy-view-location"})
+
     city = soup.find('div', attrs={"data-qa": "vacancy-serp__vacancy-address"}).text
-    whereabouts.append(city)
+    parsed_data.append(
+        {'links' : hrefs,
+         'title' : title,
+         'salary' : salary,
+         'city' : city
+         }
+    )
+
+def write_file(data,filename):
+    data = json.dumps(data)
+    data = json.loads(str(data))
+
+    with open (filename,'w', encoding='utf8') as f:
+        json.dump(data, f, indent=3)
+write_file(parsed_data,'parsed_data.json')
 
 
-# def write(data, filename):
-#     data = json.dumps(data)
-#     data = json.loads(str(data))
-#     with open(filename, 'w', encoding='utf-8') as file:
-#         json.dump(data, file, indent= 50)
-#
-#
-# Hh_data = {'Ссылка': links,
-#            'Зарплата ': salary,
-#            'Название компании': company_title,
-#            'Город': whereabouts
-#            }
-#
-# write(Hh_data, 'data.json')
+
+
+
+
+
+
